@@ -13,3 +13,37 @@ body {
   margin: 20px auto;
   max-width: 600px; /* Adjust width as needed */
 }
+
+/* Styles for ConnectWallet.js component */
+.connect-wallet {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 15px;
+}
+
+/* Styles for LocationVerification.js component */
+.location-verification {
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+/* Styles for PurchaseTicket.js component */
+.purchase-ticket button {
+  background-color: #007bff;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+/* Styles for ExitAuction.js component */
+.exit-auction button {
+  background-color: #dc3545;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
