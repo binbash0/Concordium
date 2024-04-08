@@ -1,0 +1,113 @@
+use std::collections::HashMap;
+use concordium::crypto::PublicKey;
+
+#[derive(Debug)]
+pub struct Auction {
+    seller: CCDAddress,
+    item: String,
+    starting_price: CCDAmount,
+    highest_bid: CCDAmount,
+    highest_bidder: Option<CCDOptionalAddress>,
+    has_ticket: HashMap<CCDOptionalAddress, bool>,
+    start_time: CCDTimestamp,
+    end_time: CCDTimestamp,
+}
+
+impl Auction {
+    pub fn new(
+        seller: CCDAddress,
+        item: String,
+        starting_price: CCDAmount,
+        start_time: CCDTimestamp,
+        end_time: CCDTimestamp,
+    ) -> Result<Self, ContractError> {
+        if start_time >= end_time {
+            return Err(ContractError::InvalidTimeRange);
+        }
+        Ok(Auction {
+            seller,
+            item,
+            starting_price,
+            highest_bid: starting_price,
+            highest_bidder: None,
+            has_ticket: HashMap::new(),
+            start_time,
+            end_time,
+        })
+    }
+
+    pub fn purchase_ticket(&mut self, buyer: CCDAddress, payment: CCDAmount) -> Result<(), ContractError> {
+        if self.has_ticket.contains_key(&buyer) {
+            return Err(ContractError::AlreadyHasTicket);
+        }
+
+
+        self.has_ticket.insert(buyer, true);
+        Ok(())
+    }
+
+    pub fn submit_bid(&mut self, bidder: CCDAddress, amount: CCDAmount) -> Result<(), ContractError> {
+        if !self.has_ticket.contains_key(&bidder) {
+            return Err(ContractError::NoTicket);
+        }
+
+        if amount <= self.highest_bid {
+            return Err(ContractError::InvalidBid);
+        }
+
+        if current_time() > self.end_time {
+            return Err(ContractError::AuctionEnded);
+        }
+
+        self.highest_bid = amount;
+        self.highest_bidder = Some(bidder);
+        Ok(())
+    }
+
+    pub fn finalize_auction(&mut self) -> Result<(), ContractError> {
+        if self.seller != msg.sender() {
+            return Err(ContractError::NotAuthorized);
+        }
+
+        if current_time() <= self.end_time {
+            return Err(ContractError::AuctionNotEnded);
+        }
+
+        // Transfer funds to seller (consider escrow for disputed cases)
+        // ... (Implement fund transfer logic)
+
+        // (Optional) Reset auction state for future use
+        // self.highest_bid = self.starting_price;
+        // self.highest_bidder = None;
+        // self.has_ticket.clear();
+        Ok(())
+    }
+
+    pub fn exit_auction(&mut self, user: CCDAddress) -> Result<(), ContractError> {
+        if !self.has_ticket.contains_key(&user) {
+            return Err(ContractError::NoTicket);
+        }
+
+        self.has_ticket.remove(&user);
+
+        Ok(())
+    }
+}
+
+// Define custom error type
+pub enum ContractError {
+    InsufficientFunds,
+    InvalidBid,
+    NotAuthorized,
+    AlreadyHasTicket,
+    NoTicket,
+    InvalidTimeRange,
+    AuctionEnded,
+    AuctionNotEnded,
+}
+
+fn current_time() -> CCDTimestamp {
+    // Replace with actual logic to get the current CCDTimestamp
+    // This is a placeholder for demonstration purposes
+    msg.block_time()
+}
